@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+          crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<!--SplashScreen-->
+<div id="splash-screen">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visuality-hidden"> Chargement...</span>
+    </div>
+</div>
+<header>
+    <div class="logo">
+        <img th:src="@{/images/logo.jpg}" alt="Thinkers Logo">
+    </div>
+    <div class="header-buttons">
+        <a th:href="@{/candidates/add}" class="btn btn-primary btn-sm custom-add-btn">Ajouter un Candidat</a>
+    </div>
+    <div class="logout-button">
+        <form th:action="@{/logout}" method="post">
+            <input type="submit" value="Déconnexion" class="btn btn-danger btn-sm"/>
+        </form>
+    </div>
+</header>
+
+<main>
+    <!--Header avec les differents stats-->
+    <div class="stats-container">
+        <div class="stat-box">
+            <h3>Premier Homme</h3>
+            <p th:text="${topMaleCandidate != null ? topMaleCandidate.fullname : 'N/A'}"></p>
+        </div>
+        <div class="stat-box">
+            <h3>Première Femme</h3>
+            <p th:text="${topFemaleCandidate != null ? topFemaleCandidate.fullname : 'N/A'}"></p>
+        </div>
+        <div class="stat-box">
+            <h3>Nombre de candidat</h3>
+            <p th:text="${candidateCount}"></p>
+        </div>
+        <div class="stat-box">
+            <h3>Nombre Total de vote</h3>
+            <p th:text="${totalVotes}"></p>
+        </div>
+        <div class="stat-box">
+            <h3>Nombre de candidats hommes</h3>
+            <p th:text="${hommeCount}"></p>
+        </div>
+        <div class="stat-box">
+            <h3>Nombre de candidates femmes</h3>
+            <p th:text="${femmeCount}"></p>
+        </div>
+        <div class="stat-box">
+            <h3>Gain Actuel</h3>
+            <p th:text="${totalGain + ' FCFA'}"></p>
+        </div>
+    </div>
+
+    <!--Section de l'histogramme-->
+    <div class="chart-section">
+        <div class="chart-controls">
+            <button id="exportButton" class="btn btn-secondary">Exporter les graphiques</button>
+        </div>
+        <div class="chart-container">
+            <h3>Votes pour les candidats hommes</h3>
+            <canvas id="voteChartHomme"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Votes pour les candidates femmes</h3>
+            <canvas id="voteChartFemme"></canvas>
+        </div>
+    </div>
+
+    <table class="table table-striped table-borderer">
+        <thead class="table-dark">
+        <tr>
+            <th>Numéro</th>
+            <th>Nom</th>
+            <th>Photo</th>
+            <th>Nombre de votes</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="candidate, iterStat : ${candidates}">
+            <td th:text="${candidate.voteNumber}"></td>
+            <td th:text="${candidate.fullname}"></td>
+            <td><img th:src="@{'/candidate/image/' + ${candidate.id}}" alt="Photo du candidat" class="candidate-photo"></td>
+            <td th:text="${candidate.voteCount}"></td>
+            <td>
+                <a th:href="@{/candidate/edit/{id}(id=${candidate.id})}" class="btn btn-primary">Modifier</a>
+                <a th:href="@{/candidate/delete/{id}(id=${candidate.id})}" class="btn btn-danger"
+                   onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce candidat ?');">Suppimer</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</main>
+
+<!--splashscreen-->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            document.getElementById('splash-screen').style.display = 'none';
+            document.querySelector('.content').style.display = 'block';
+        }, 2000); // Affiche le splash screen pendant 2 secondes
+    });
+</script>
+
+<!--Script de l'histogramme-->
+<script th:inline="javascript">
+    var ctxHomme = document.getElementById('voteChartHomme').getContext('2d');
+    var ctxFemme = document.getElementById('voteChartFemme').getContext('2d');
+
+    var candidatesHomme = /*[[${candidatsHommes}]]*/ [];
+    var candidatesFemme = /*[[${candidatsFemmes}]]*/ [];
+
+    var candidateNamesHomme = candidatesHomme.map(c => c.fullname);
+    var voteCountsHomme = candidatesHomme.map(c => c.voteCount);
+
+    var candidateNamesFemme = candidatesFemme.map(c => c.fullname);
+    var voteCountsFemme = candidatesFemme.map(c => c.voteCount);
+
+    var chartHomme = new Chart(ctxHomme, {
+        type: 'bar',
+        data: {
+            labels: candidateNamesHomme,
+            datasets: [{
+                label: 'Nombre de votes (Hommes)',
+                data: voteCountsHomme,
+                backgroundColor: 'rgba(54, 162, 235, 0.6)'
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    var chartFemme = new Chart(ctxFemme, {
+        type: 'bar',
+        data: {
+            labels: candidateNamesFemme,
+            datasets: [{
+                label: 'Nombre de votes (Femmes)',
+                data: voteCountsFemme,
+                backgroundColor: 'rgba(255, 99, 132, 0.6)'
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    document.getElementById('exportButton').addEventListener('click', function() {
+        html2canvas(document.getElementById('voteChartHomme')).then(function(canvas) {
+            var link = document.createElement('a');
+            link.download = 'histogramme_votes_hommes.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+
+        html2canvas(document.getElementById('voteChartFemme')).then(function(canvas) {
+            var link = document.createElement('a');
+            link.download = 'histogramme_votes_femmes.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+    });
+</script>
+</body>
+</html>
