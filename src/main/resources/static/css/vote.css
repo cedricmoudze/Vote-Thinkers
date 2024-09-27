@@ -1,0 +1,150 @@
+/*page de vote*/
+/*body {
+    th:style="background-image: url(${@{/images/votebg.jpeg}});
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}*/
+
+.vote-page {
+    background-image: url('../images/votebg.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+}
+
+/*contenu reste lisible sur le fond d'écran*/
+.vote-page::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Ajustez l'opacité selon vos besoins */
+    z-index: -1;
+}
+
+h1.text-center {
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/*Header*/
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo-left {
+    order: 1;
+}
+
+.logo-right {
+    order: 2;
+}
+
+.logo-left, .logo-right {
+    max-height: 50px;
+    width: auto;
+}
+
+.header-content {
+    padding: 0 15px; /* Ajoute un peu d'espace sur les côtes */
+}
+
+/*NB : Réactivité sur mobile*/
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .logo-left, .logo-right {
+        margin-bottom: 10px;
+    }
+}
+
+
+.candidate-card {
+     background-color: rgba(255, 255, 255, 0.9);
+        border-radius: 10px;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.candidate-number {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: red;
+    color: white;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.candidate-info {
+    background-color: #c41c1c;
+    color: white;
+    padding: 10px;
+}
+
+.candidate-name {
+    font-family: 'Pinyon Script', 'Tangerine', cursive;
+    text-align: center;
+    font-size: 2em; /* Adjust size as needed */
+    font-weight: normal;
+    margin-bottom: 15px;
+    color: #ffffff; /* Ensure good contrast with background */
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3); /* Optional: adds depth */
+}
+
+.vote-percentage {
+    font-size:1.2em;
+    font-weight:bold
+}
+
+.vote-price {
+    font-size:1em
+}
+
+.vote-button {
+     background-color: white;
+        color: #c41c1c;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-weight: bold;
+        transition: background-color 0.3s, color 0.3s;
+}
+
+.vote-button:hover {
+    background-color: #a01616
+    color:white
+}
+
+/*Splash screen*/
+#splash-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.content {
+    display: none;
+}

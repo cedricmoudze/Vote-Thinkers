@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>Vote Page</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Pinyon+Script&family=Tangerine&display=swap" rel="stylesheet">
+    <link th:href="@{/css/vote.css}" rel="stylesheet" />
+</head>
+<body class="vote-page">
+
+<!--Splash Screen-->
+<div id="splash-screen">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Chargement...</span>
+    </div>
+</div>
+
+<div class="content"><!--englobe tous les element pour les afficher apres le splashscreen-->
+    <div class="container-fluid p-0">
+        <header class="bg-white py-3">
+            <div class="container">
+                <div class="header-content">
+                    <img th:src="@{/images/logo.jpg}" alt="Thinkers Production" class="img-fluid logo-left" style="max-height: 70px;">
+                    <img th:src="@{/images/logo-joker.jpg}" alt="Joker Challenge" class="img-fluid logo-right" style="max-height: 70px;">
+                </div>
+            </div>
+        </header>
+
+        <main class="container my-4">
+            <h1 class="text-center text-black mb-4">Soutiens ton (ta) préféré(e)</h1>
+
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+                <div th:each="candidate, iterStat : ${candidates}" class="col">
+                    <div class="candidate-card">
+                        <span th:text="${iterStat.count}" class="candidate-number"></span>
+                        <img th:src="@{'/candidate/image/' + ${candidate.id}}" th:alt="${candidate.fullname}" class="img-fluid">
+                        <div class="candidate-info">
+                            <h5 th:text="${candidate.fullname}" class="candidate-name mb-3"></h5>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="vote-price">100 f / vote</span>
+                                <span class="vote-percentage" th:text="${#numbers.formatDecimal(candidate.votePercentage, 1, 2) + '%'}"></span>
+                            </div>
+                            <div class="text-center">
+                                <button class="vote-button" th:attr="data-candidate-id=${candidate.id}">Je vote</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="bg-dark text-white text-center py-3 mt-4">
+            <p class="mb-0">Copyright Thinkers Production & Build By KMS Entreprises.</p>
+        </footer>
+    </div>
+
+    <!-- Modal de paiement -->
+    <div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Choisir votre moyen de paiement</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex justify-content-around">
+                        <button id="mobileMoney" class="btn btn-outline-primary">
+                            <img th:src="@{/images/momo.jpeg}" alt="Mobile Money" class="img-fluid mb-2" style="max-height: 50px;">
+                            <br>Mobile Money
+                        </button>
+                        <button id="orangeMoney" class="btn btn-outline-primary">
+                            <img th:src="@{/images/om.png}" alt="Orange Money" class="img-fluid mb-2" style="max-height: 50px;">
+                            <br>Orange Money
+                        </button>
+                        <button id="visaCard" class="btn btn-outline-primary">
+                            <img th:src="@{/images/visa-carte.png}" alt="Carte Visa" class="img-fluid mb-2" style="max-height: 50px;">
+                            <br>Carte Visa
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--<script th:src="@{/js/vote.js}"></script>-->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<!--splashscreen-->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            document.getElementById('splash-screen').style.display = 'none';
+            document.querySelector('.content').style.display = 'block';
+        }, 2000); // Affiche le splash screen pendant 2 secondes
+    });
+</script>
+
+<script>
+    let selectedCandidateId;
+
+    // Gestionnaire pour les boutons "Je vote"
+    document.querySelectorAll('.vote-button').forEach(button => {
+        button.addEventListener('click', function() {
+            selectedCandidateId = this.getAttribute('data-candidate-id');
+            var myModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+            myModal.show();
+        });
+    });
+
+    // Gestionnaire pour le bouton Mobile Money
+    document.getElementById('mobileMoney').addEventListener('click', function() {
+        processVote('Mobile Money');
+    });
+
+    // Gestionnaire pour le bouton Orange Money
+    document.getElementById('orangeMoney').addEventListener('click', function() {
+        processVote('Orange Money');
+    });
+
+    //Gestionnaire pour le bouton Carte Visa
+    document.getElementById('visaCard').addEventListener('click', function() {
+        processVote('Carte Visa')
+    });
+
+    function processVote(paymentMethod) {
+    if (!selectedCandidateId) {
+        alert("Erreur : Aucun candidat sélectionné");
+        return;
+    }
+
+    // Désactiver les boutons pendant le traitement
+    const buttons = ['mobileMoney', 'orangeMoney', 'visaCard'];
+    buttons.forEach(id => document.getElementById(id).disabled = true);
+
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+    fetch(`/vote/${selectedCandidateId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            [csrfHeader]: csrfToken
+        },
+        body: JSON.stringify({
+            paymentMethod: paymentMethod,
+            amount: "100",
+            email: "user@example.com", // À remplacer par l'email réel de l'utilisateur
+            name: "Utilisateur", // À remplacer par le nom réel de l'utilisateur
+            phoneNumber: "1234567890" // À remplacer par le numéro réel de l'utilisateur
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => { throw new Error(text) });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.paymentLink) {
+            window.location.href = data.paymentLink;
+        } else {
+            throw new Error('Lien de paiement non reçu');
+        }
+    })
+    .catch((error) => {
+        console.error('Erreur:', error);
+        alert("Erreur lors du vote: " + error.message);
+    })
+    .finally(() => {
+        // Réactiver les boutons
+        buttons.forEach(id => document.getElementById(id).disabled = false);
+        // Fermer le modal
+        bootstrap.Modal.getInstance(document.getElementById('paymentModal')).hide();
+    });
+}
+    }
+</script>
+</body>
+</html>

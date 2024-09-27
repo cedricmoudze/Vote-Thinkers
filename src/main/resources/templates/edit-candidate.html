@@ -1,0 +1,36 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Modifier Candidat</title>
+    <link rel="stylesheet" th:href="@{/css/addCandidate.css}">
+</head>
+<body>
+<h1>Modifier le candidat</h1>
+<form th:action="@{/candidate/edit/{id}(id=${candidate.id})}" th:object="${candidate}" method="post" enctype="multipart/form-data">
+    <div>
+        <label for="fullname">Nom complet:</label>
+        <input type="text" id="fullname" th:field="*{fullname}" required>
+    </div>
+    <div>
+        <label for="voteNumber">Numéro de vote:</label>
+        <input type="text" id="voteNumber" th:field="*{voteNumber}" required>
+    </div>
+    <div>
+        <label for="gender">Genre:</label>
+        <select id="gender" th:field="*{gender}" required>
+            <option value="">Sélectionnez un genre</option>
+            <option th:each="genderOpt : ${T(com.vote.VotingSystem.Model.Gender).values()}"
+                    th:value="${genderOpt}" th:text="${genderOpt}"
+                    th:selected="${genderOpt == candidate.gender}"></option>
+        </select>
+    </div>
+    <div>
+        <label for="photo">Photo:</label>
+        <input type="file" id="photo" name="file" accept="image/*">
+    </div>
+    <div>
+        <img th:if="${candidate.photo}" th:src="@{/candidate/image/{id}(id=${candidate.id})}" alt="Photo du candidat" >
+    </div>
+    <button type="submit">Mettre à jour</button>
+</form>
+</body>
+</html>
