@@ -12,14 +12,14 @@
 </head>
 <body class="vote-page">
 
-<!--Splash Screen-->
+<!-- Splash Screen -->
 <div id="splash-screen">
     <div class="spinner-border text-primary" role="status">
         <span class="visually-hidden">Chargement...</span>
     </div>
 </div>
 
-<div class="content"><!--englobe tous les element pour les afficher apres le splashscreen-->
+<div class="content"><!-- Englobe tous les éléments pour les afficher après le splash screen -->
     <div class="container-fluid p-0">
         <header class="bg-white py-3">
             <div class="container">
@@ -76,19 +76,19 @@
                             <img th:src="@{/images/om.png}" alt="Orange Money" class="img-fluid mb-2" style="max-height: 50px;">
                             <br>Orange Money
                         </button>
-                        <button id="visaCard" class="btn btn-outline-primary">
+                        <!--<button id="visaCard" class="btn btn-outline-primary">
                             <img th:src="@{/images/visa-carte.png}" alt="Carte Visa" class="img-fluid mb-2" style="max-height: 50px;">
                             <br>Carte Visa
-                        </button>
+                        </button>-->
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-<!--<script th:src="@{/js/vote.js}"></script>-->
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-<!--splashscreen-->
+<!-- Splash screen script -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         setTimeout(function() {
@@ -120,62 +120,61 @@
         processVote('Orange Money');
     });
 
-    //Gestionnaire pour le bouton Carte Visa
+    // Gestionnaire pour le bouton Carte Visa
     document.getElementById('visaCard').addEventListener('click', function() {
-        processVote('Carte Visa')
+        processVote('Carte Visa');
     });
 
     function processVote(paymentMethod) {
-    if (!selectedCandidateId) {
-        alert("Erreur : Aucun candidat sélectionné");
-        return;
-    }
+        if (!selectedCandidateId) {
+            alert("Erreur : Aucun candidat sélectionné");
+            return;
+        }
 
-    // Désactiver les boutons pendant le traitement
-    const buttons = ['mobileMoney', 'orangeMoney', 'visaCard'];
-    buttons.forEach(id => document.getElementById(id).disabled = true);
+        // Désactiver les boutons pendant le traitement
+        const buttons = ['mobileMoney', 'orangeMoney', 'visaCard'];
+        buttons.forEach(id => document.getElementById(id).disabled = true);
 
-    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
 
-    fetch(`/vote/${selectedCandidateId}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            [csrfHeader]: csrfToken
-        },
-        body: JSON.stringify({
-            paymentMethod: paymentMethod,
-            amount: "100",
-            email: "user@example.com", // À remplacer par l'email réel de l'utilisateur
-            name: "Utilisateur", // À remplacer par le nom réel de l'utilisateur
-            phoneNumber: "1234567890" // À remplacer par le numéro réel de l'utilisateur
+        fetch(`/vote/${selectedCandidateId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                [csrfHeader]: csrfToken
+            },
+            body: JSON.stringify({
+                paymentMethod: paymentMethod,
+                amount: "100",
+                email: "email@example.com", // À remplacer par l'email réel de l'utilisateur
+                name: "Votre nom", // À remplacer par le nom réel de l'utilisateur
+                phoneNumber: "676395927" // À remplacer par le numéro réel de l'utilisateur
+            })
         })
-    })
-    .then(response => {
-        if (!response.ok) {
-            return response.text().then(text => { throw new Error(text) });
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.paymentLink) {
-            window.location.href = data.paymentLink;
-        } else {
-            throw new Error('Lien de paiement non reçu');
-        }
-    })
-    .catch((error) => {
-        console.error('Erreur:', error);
-        alert("Erreur lors du vote: " + error.message);
-    })
-    .finally(() => {
-        // Réactiver les boutons
-        buttons.forEach(id => document.getElementById(id).disabled = false);
-        // Fermer le modal
-        bootstrap.Modal.getInstance(document.getElementById('paymentModal')).hide();
-    });
-}
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => { throw new Error(text) });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.paymentLink) {
+                window.location.href = data.paymentLink;
+            } else {
+                throw new Error('Lien de paiement non reçu');
+            }
+        })
+        .catch((error) => {
+            console.error('Erreur:', error);
+            alert("Erreur lors du vote: " + error.message);
+        })
+        .finally(() => {
+            // Réactiver les boutons
+            buttons.forEach(id => document.getElementById(id).disabled = false);
+            // Fermer le modal
+            bootstrap.Modal.getInstance(document.getElementById('paymentModal')).hide();
+        });
     }
 </script>
 </body>

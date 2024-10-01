@@ -151,12 +151,12 @@ public class MainController {
     public ResponseEntity<?> vote(@PathVariable Long id, @RequestBody Map<String, String> paymentDetails) {
         try {
             String paymentLink = flutterwaveService.initiatePayment(
-                    id.toString(), // candidateId
-                    Double.parseDouble(paymentDetails.get("amount")),
+                    id.toString(),
+                    100.0, // Montant fixe de 100 FCFA
                     paymentDetails.get("email"),
                     paymentDetails.get("name"),
                     paymentDetails.get("phoneNumber"),
-                    "https://votre-site.com/payment-callback", // redirectUrl
+                    "https://votre-site.com/payment-callback",
                     paymentDetails.get("paymentMethod")
             );
             if (paymentLink != null) {
@@ -173,8 +173,7 @@ public class MainController {
     public String handlePaymentCallback(@RequestParam String transaction_id, @RequestParam String status) {
         try {
             if ("successful".equals(status) && flutterwaveService.verifyTransaction(transaction_id)) {
-                // Implémentez ici la logique pour enregistrer le vote
-                // Vous devrez extraire l'ID du candidat du tx_ref ou d'un autre endroit
+
                 String candidateId = extractCandidateIdFromTransaction(transaction_id);
                 candidateService.incrementVoteCount(Long.parseLong(candidateId));
                 return "redirect:/vote?success=true";
@@ -188,8 +187,7 @@ public class MainController {
 
     // Méthode pour extraire l'ID du candidat du tx_ref
     private String extractCandidateIdFromTransaction(String transactionId) {
-        // Implement the logic to extract the candidate ID from the transaction
-        // This assumes that the transaction_id is in the format "vote_candidateId_timestamp"
+
         String[] parts = transactionId.split("_");
         if (parts.length >= 2) {
             return parts[1]; // Return the candidateId part

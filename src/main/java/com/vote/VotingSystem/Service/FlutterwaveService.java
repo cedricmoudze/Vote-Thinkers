@@ -1,6 +1,8 @@
 package com.vote.VotingSystem.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -26,7 +28,8 @@ public class FlutterwaveService {
 
     private final String baseUrl = "https://api.flutterwave.com/v3";
 
-    public String initiatePayment(String candidateId, Double amount, String email, String name, String phoneNumber, String redirectUrl, String paymentMethod){
+    public String initiatePayment(String candidateId, Double amount, String email, String name, String phoneNumber, String redirectUrl, String paymentMethod) {
+
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -35,7 +38,7 @@ public class FlutterwaveService {
         Map<String, Object> payload = new HashMap<>();
         payload.put("tx_ref", "vote_" + candidateId + "_" + System.currentTimeMillis());
         payload.put("amount", amount);
-        payload.put("currency", "XOF");
+        //payload.put("currency", "XOF");
         payload.put("redirect_url", redirectUrl);
         payload.put("payment_options", paymentMethod);
         payload.put("meta", Map.of("consumer_id", candidateId, "consumer_mac", "92a3-912ba-1192a"));
@@ -49,15 +52,21 @@ public class FlutterwaveService {
                 "description", "Paiement pour un vote",
                 "logo", "https://votre-logo.com/logo.png"
         ));
+        payload.put("amount", amount);
+        payload.put("currency", "XAF");
 
-        // Ajouter les options de paiement en fonction de la méthode choisie
-        if ("card".equals(paymentMethod)) {
-            payload.put("payment_options", "card");
-        } else if ("mobilemoney".equals(paymentMethod) || "orangemoney".equals(paymentMethod)) {
-            payload.put("payment_options", paymentMethod);
-        } else {
-            throw new IllegalArgumentException("Méthode de paiement non supportée");
+        // Gestion des méthodes de paiement spécifiques au Cameroun
+        switch (paymentMethod.toLowerCase()) {
+            case "mobile money":
+                payload.put("payment_options", "mobilemoneycm");
+                break;
+            case "orange money":
+                payload.put("payment_options", "orangemoney");
+                break;
+            default:
+                throw new IllegalArgumentException("Méthode de paiement non supportée");
         }
+
 
         String encryptedPayload = encryptPayload(payload);
         Map<String, String> encryptedBody = new HashMap<>();
@@ -68,7 +77,7 @@ public class FlutterwaveService {
         try {
             ResponseEntity<Map> response = restTemplate.postForEntity(baseUrl + "/charges?type=mobile_money_franco", entity, Map.class);
             if (response.getStatusCode() == HttpStatus.OK) {
-                return (String) ((Map)response.getBody().get("data")).get("link");
+                return (String) ((Map) response.getBody().get("data")).get("link");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -114,6 +123,4 @@ public class FlutterwaveService {
         }
         return false;
     }
-
-
 }
